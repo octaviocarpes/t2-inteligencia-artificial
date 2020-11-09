@@ -1,0 +1,17 @@
+{
+  "name": "t2-inteligencia-artificial",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/octaviocarpes/t2-inteligencia-artificial.git",
+  "author": "Octavio Carpes <octavio.carpes10@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "eslint": "^7.13.0",
+    "prettier": "^2.1.2",
+    "ts-node": "^9.0.0",
+    "typescript": "^4.0.5"
+  },
+  "scripts": {
+    "start": "ts-node src/app.ts"
+  }
+}
