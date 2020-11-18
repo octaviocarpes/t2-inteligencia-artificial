@@ -1,6 +1,8 @@
 import { Maze } from './Maze'
-console.log('hello world')
+import { GeneticAlgorithm } from "./GeneticAlgorithm";
 
 const maze = new Maze()
+const genetic = new GeneticAlgorithm(10, 10, 10)
 
 console.log(maze.maze)
+genetic.start()

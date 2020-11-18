@@ -19,4 +19,8 @@ export class Maze {
   public setMaze(newMaze: string[][]) {
     this.maze = newMaze
   }
+
+  public getMaze(): string[][] {
+    return this.maze
+  }
 }
