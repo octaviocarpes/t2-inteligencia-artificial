@@ -1,3 +1,38 @@
 export class Neuron {
+  private defineFunction: number
 
+  constructor(
+    public weights: number[],
+  ) {
+    this.defineFunction = 0
+  }
+
+  public setFunction(defineFunction: number): void {
+    this.defineFunction = defineFunction
+  }
+
+  public calculateY(x: number[]): number {
+    let v: number = 0
+    let i;
+
+    for (i = 0; i < x.length; i++) {
+      v = v + this.weights[i] * x[i]
+    }
+
+    v = v + this.weights[i] // bias
+
+    if (this.defineFunction === 1) {
+      return this.hyperbolicTangent(v)
+    } else {
+      return this.logistic(v)
+    }
+  }
+
+  public logistic(v: number): number {
+    return 1 / (1 + Math.exp(-v))
+  }
+
+  public hyperbolicTangent(v: number): number {
+    return Math.tanh(v)
+  }
 }

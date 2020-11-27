@@ -1,12 +1,8 @@
 export class Chromosome {
-  constructor(private solution: string[]) {
+  constructor(private solution: number[]) {
   }
 
-  public getSolution(): string[] {
+  public getSolution(): number[] {
     return this.solution
-  }
-
-  public updateSolution(index: number, value: string) {
-    this.solution[index] = value
   }
 }

@@ -1,5 +1,6 @@
-import {Maze} from "./Maze";
-import {Directions, MazeValues} from "./constants/Directions";
+import { Maze } from "./Maze";
+import { Directions, MazeValues } from "./constants/Directions";
+import { Neuron } from "./Neuron";
 
 interface Position {
   x: number,
@@ -8,11 +9,13 @@ interface Position {
 
 export class Agent {
   private maze: Maze
+  private neurons: Array<Neuron>
   private currentPosition: Position
 
   constructor(maze: Maze) {
     this.maze = maze
-    this.currentPosition  = { x: 0, y: 0 }
+    this.neurons = []
+    this.currentPosition = { x: 0, y: 0 }
   }
 
   private updateScoreBasedOnPositionValue(score: number): void {
@@ -81,7 +84,7 @@ export class Agent {
 
   public walk(path: string[]): number {
     let score = 0
-    for(let i = 0; i < path.length; i++) {
+    for (let i = 0; i < path.length; i++) {
       this.updatePosition(path[i], score)
     }
     return score
