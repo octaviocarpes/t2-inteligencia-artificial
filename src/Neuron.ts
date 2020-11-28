@@ -1,10 +1,10 @@
 export class Neuron {
   private defineFunction: number
+  public weights: number[]
 
-  constructor(
-    public weights: number[],
-  ) {
+  constructor(weights: number[]) {
     this.defineFunction = 0
+    this.weights = weights
   }
 
   public setFunction(defineFunction: number): void {

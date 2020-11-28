@@ -16,19 +16,20 @@ export class Network {
 
   public setNetworkWeights(entrySize: number, weights: Array<number>): void {
     let k = 0;
-    let temp: number[] = []
 
     for (let i = 0; i < this.hiddenNeuronsSize; i++) {
+      let temp: number[] = []
       for (let j = 0; j < entrySize; j++) {
-        temp[j] = weights[k]
+        temp.push(weights[k])
         k++
       }
       this.hiddenNeuronLayer.push(new Neuron(temp))
     }
 
     for (let i = 0; i < this.resultNeuronsSize; i++) {
+      let temp: number[] = []
       for (let j = 0; j < entrySize; j++) {
-        temp[j] = weights[k]
+        temp.push(weights[k])
         k++
       }
       this.resultNeuronLayer.push(new Neuron(temp))
@@ -40,11 +41,13 @@ export class Network {
     let hiddenLayerResults: number[] = []
 
     for (let i = 0; i < this.hiddenNeuronsSize; i++) {
-      hiddenLayerResults.push(this.hiddenNeuronLayer[i].calculateY(x))
+      const synapse = this.hiddenNeuronLayer[i].calculateY(x)
+      hiddenLayerResults.push(synapse)
     }
 
     for (let i = 0; i < this.resultNeuronsSize; i++) {
-      this.results.push(this.resultNeuronLayer[i].calculateY(hiddenLayerResults))
+      const synapse = this.resultNeuronLayer[i].calculateY(x)
+      this.results.push(synapse)
     }
 
     return this.results

@@ -1,4 +1,8 @@
+import { Agent } from "./Agent";
 import { Chromosome } from "./Chromosome";
+import { Directions } from "./constants/Directions";
+import { Maze } from "./Maze";
+import { Network } from "./Network";
 
 interface Population {
   chromosome: Chromosome,
@@ -56,13 +60,67 @@ export class GeneticAlgorithm {
 
   }
 
-  public start(): void {
-    console.log('\n')
-    console.log('===================================')
-    console.log('\n')
-    let count = 0;
-    this.generateInitialPopulation()
+  private makeAgentWalk(direction: string) {
+    const maze = new Maze()
+    const agent = new Agent(maze)
+    const walkResult = agent.walk(direction)
+    return walkResult
+  }
 
-    console.log(this.population)
+  public start(): void {
+    let count = 0;
+
+    let chromossome = [];
+    for (let i = 0; i < this.populationSize; i++) {
+      const rng = Math.random()
+      if (rng < 0.5) chromossome.push((Math.random() * -1))
+      else chromossome.push(Math.random())
+    }
+
+    const network = new Network(8, 4)
+
+    network.setNetworkWeights(8, chromossome)
+
+
+    // -1 fora do labirinto
+    // 0 parede
+    // 1 caminho livre
+    // 2 moeda
+    const propagationResult = network.propagation([-1, -1, 1, 1]) // a gente tem que pegar o entorno do agente e passar pra ca
+
+    const nextMove = propagationResult.indexOf(
+      propagationResult.reduce((prev, next): number => {
+        if (prev > next) return prev
+        else return next
+      })
+    )
+
+    // tracking da distancia que o agente percorreu
+    // tracking de quantas moedas
+    // para calcular o fitness do cromossomo
+
+    switch (nextMove) {
+      case 0: {
+        console.log(this.makeAgentWalk(Directions.LEFT))
+        break
+      }
+
+      case 1: {
+        console.log(this.makeAgentWalk(Directions.UP))
+        break
+      }
+
+      case 2: {
+        console.log(this.makeAgentWalk(Directions.RIGHT))
+        break
+      }
+
+      case 3: {
+        console.log(this.makeAgentWalk(Directions.DOWN))
+        break
+      }
+
+      default: return
+    }
   }
 }
