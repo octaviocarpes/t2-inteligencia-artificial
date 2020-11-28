@@ -1,3 +1,20 @@
+/*
+
+  Tirar duvida: ficar propagando entorno do agente na rede ate o agente errar?
+
+  A principio ficar propagando entorno do agente ate ele errar
+    quando ele errar, fazer:
+      ver quantas moedas ele pegou
+      ver qual a distancia total percorrida pelo agente
+      calcular o fitness do cromossomo
+      recomecar o processo com o proximo cromossomo
+  
+  Depois de terminar todos os cromossomos
+    escolher o de maior fitness e criar a nova populacao (algoritmo genetico com reproducao e mutacao)
+
+*/
+
+
 import { Agent } from "./Agent";
 import { Chromosome } from "./Chromosome";
 import { Directions } from "./constants/Directions";
