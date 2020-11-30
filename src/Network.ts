@@ -19,7 +19,7 @@ export class Network {
 
     for (let i = 0; i < this.hiddenNeuronsSize; i++) {
       let temp: number[] = []
-      for (let j = 0; j < entrySize; j++) {
+      for (let j = 0; j < entrySize + 1; j++) {
         temp.push(weights[k])
         k++
       }
@@ -28,7 +28,7 @@ export class Network {
 
     for (let i = 0; i < this.resultNeuronsSize; i++) {
       let temp: number[] = []
-      for (let j = 0; j < entrySize; j++) {
+      for (let j = 0; j < entrySize + 1; j++) {
         temp.push(weights[k])
         k++
       }

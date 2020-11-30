@@ -20,6 +20,8 @@ import { Chromosome } from "./Chromosome";
 import { Directions } from "./constants/Directions";
 import { Maze } from "./Maze";
 import { Network } from "./Network";
+import {findDuplicate} from "./utils/FindDuplicate";
+const Jetty = require('jetty')
 
 interface Population {
   chromosome: Chromosome,
@@ -43,7 +45,7 @@ export class GeneticAlgorithm {
 
   private createPopulation(): Chromosome {
     let population = [];
-    for (let i = 0; i < this.networkSize; i++) {
+    for (let i = 0; i < this.populationSize; i++) {
       const rng = Math.random()
       if (rng < 0.5) population.push((Math.random() * -1))
       else population.push(Math.random())
@@ -78,24 +80,27 @@ export class GeneticAlgorithm {
   }
 
   private penalizeByWallHit(path: WalkResult[]): number {
-    const wasWallHit = path.filter((walkResult) => walkResult.isValid.result === false && walkResult.isValid.reason.split(':')[0] === 'wall')
-    if (wasWallHit) {
+    const wasWallHit = path.filter((walkResult) => walkResult.isValid.result === false)
+    if (wasWallHit.length) {
       return 100
     }
     return 0
   }
 
   private handleCycleDetection(path: WalkResult[]): number {
-    const wasWallHit = path.filter((walkResult) => walkResult.isValid.result === false && walkResult.isValid.reason.split(':')[0] === 'wall')
-    if (wasWallHit) {
-      return 100
+    if (path.length) {
+      const haveDuplicates = findDuplicate(path)
+
+      if (haveDuplicates.length) {
+        return 100
+      }
     }
+
     return 0
   }
 
   private handleCoinCollection(agent: Agent, coinsCollected: number) {
     const {x, y} = agent.currentPosition
-    console.log(x, y)
     if (agent.isPositionACoin(x, y)) {
       agent.collectCoin(x, y)
       coinsCollected++
@@ -103,12 +108,10 @@ export class GeneticAlgorithm {
   }
 
 
-  private handleAgentWalk(direction: string) {
+  private handleAgentWalk(agent: Agent, direction: string) {
     let coinsCollected = 0
     let distanceTravelled = 0
     let path: WalkResult[] = []
-    const maze = new Maze()
-    const agent = new Agent(maze)
     const walkResult = agent.walk(direction)
 
     if (walkResult.isValid.result) {
@@ -118,30 +121,33 @@ export class GeneticAlgorithm {
     }
     const score = this.calculateFitness(coinsCollected, distanceTravelled, path)
 
-    console.log(walkResult)
-    console.log(score)
+    return {
+      walkResult,
+      score
+    }
+  }
+
+  private getFirstResult() {
+
   }
 
   public start(): void {
+    this.generateInitialPopulation()
+
     let count = 0;
-
-    let chromossome = [];
-    for (let i = 0; i < this.populationSize; i++) {
-      const rng = Math.random()
-      if (rng < 0.5) chromossome.push((Math.random() * -1))
-      else chromossome.push(Math.random())
-    }
-
+    let iterationResult
+    const maze = new Maze()
+    const agent = new Agent(maze)
+    let chromossome = this.population[count].chromosome.getSolution()
     const network = new Network(8, 4)
-
     network.setNetworkWeights(8, chromossome)
-
 
     // -1 fora do labirinto
     // 0 parede
     // 1 caminho livre
     // 2 moeda
-    const propagationResult = network.propagation([-1, -1, 1, 1]) // a gente tem que pegar o entorno do agente e passar pra ca
+    const agentSurrounding = agent.getAgentSurroundings().map(surrounding => surrounding.value)
+    const propagationResult = network.propagation(agentSurrounding)
 
     const nextMove = propagationResult.indexOf(
       propagationResult.reduce((prev, next): number => {
@@ -150,28 +156,37 @@ export class GeneticAlgorithm {
       })
     )
 
+
     switch (nextMove) {
       case 0: {
-        this.handleAgentWalk(Directions.LEFT)
+        iterationResult = this.handleAgentWalk(agent, Directions.LEFT)
         break
       }
 
       case 1: {
-        this.handleAgentWalk(Directions.UP)
+        iterationResult = this.handleAgentWalk(agent, Directions.UP)
         break
       }
 
       case 2: {
-        this.handleAgentWalk(Directions.RIGHT)
+        iterationResult = this.handleAgentWalk(agent, Directions.RIGHT)
         break
       }
 
       case 3: {
-        this.handleAgentWalk(Directions.DOWN)
+        iterationResult = this.handleAgentWalk(agent, Directions.DOWN)
         break
       }
 
       default: return
     }
+    console.log(iterationResult)
+
+    // while (count < this.populationSize) {
+    //  Fazer agente caminhar ate fracassar
+    //  aqui algoritmo genetico
+    //  depois do agente caminhar e fracassar, fazer os esquemas do genetico
+    // }
+    count++
   }
 }
