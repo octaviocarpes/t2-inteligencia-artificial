@@ -12,7 +12,7 @@ interface AgentSurrouding {
   distance: number
 }
 
-interface WalkResult {
+export interface WalkResult {
   position: Position
   isValid: {
     result: boolean
@@ -24,7 +24,7 @@ interface WalkResult {
 
 export class Agent {
   private maze: Maze
-  private currentPosition: Position
+  public currentPosition: Position
 
   constructor(maze: Maze) {
     this.maze = maze
@@ -55,8 +55,8 @@ export class Agent {
 
   private getInvalidPositionReason(): string {
     const { x, y } = this.currentPosition
-    if (this.isPositionWall(x, y)) return 'Agent hit a wall'
-    else return 'Agent went out of bounds'
+    if (this.isPositionWall(x, y)) return 'wall: Agent hit a wall'
+    else return 'bounds: Agent went out of bounds'
   }
 
   private isInsideMaze(x: number, y: number): boolean {
@@ -162,6 +162,14 @@ export class Agent {
         distanceToEnd: this.calculateEuclideanDistance(this.currentPosition.x, this.currentPosition.y)
       }
     }
+  }
+
+  public isPositionACoin(x: number, y: number): boolean {
+    return this.maze.getMaze()[x][y] === 'M'
+  }
+
+  public collectCoin(x: number, y: number): void {
+    this.maze.getMaze()[x][y] = '0'
   }
 
 }

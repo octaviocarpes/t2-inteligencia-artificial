@@ -8,14 +8,14 @@
       ver qual a distancia total percorrida pelo agente
       calcular o fitness do cromossomo
       recomecar o processo com o proximo cromossomo
-  
+
   Depois de terminar todos os cromossomos
     escolher o de maior fitness e criar a nova populacao (algoritmo genetico com reproducao e mutacao)
 
 */
 
 
-import { Agent } from "./Agent";
+import {Agent, WalkResult} from "./Agent";
 import { Chromosome } from "./Chromosome";
 import { Directions } from "./constants/Directions";
 import { Maze } from "./Maze";
@@ -61,8 +61,8 @@ export class GeneticAlgorithm {
     }
   }
 
-  private calculateFitness(population: Population) {
-
+  private calculateFitness(coinsCollected: number, distanceTravelled: number, path: WalkResult[]) {
+    return coinsCollected * 10 + distanceTravelled * 3 - this.handleCycleDetection(path) - this.penalizeByWallHit(path)
   }
 
   private selectPopulation(): Population {
@@ -77,11 +77,49 @@ export class GeneticAlgorithm {
 
   }
 
-  private makeAgentWalk(direction: string) {
+  private penalizeByWallHit(path: WalkResult[]): number {
+    const wasWallHit = path.filter((walkResult) => walkResult.isValid.result === false && walkResult.isValid.reason.split(':')[0] === 'wall')
+    if (wasWallHit) {
+      return 100
+    }
+    return 0
+  }
+
+  private handleCycleDetection(path: WalkResult[]): number {
+    const wasWallHit = path.filter((walkResult) => walkResult.isValid.result === false && walkResult.isValid.reason.split(':')[0] === 'wall')
+    if (wasWallHit) {
+      return 100
+    }
+    return 0
+  }
+
+  private handleCoinCollection(agent: Agent, coinsCollected: number) {
+    const {x, y} = agent.currentPosition
+    console.log(x, y)
+    if (agent.isPositionACoin(x, y)) {
+      agent.collectCoin(x, y)
+      coinsCollected++
+    }
+  }
+
+
+  private handleAgentWalk(direction: string) {
+    let coinsCollected = 0
+    let distanceTravelled = 0
+    let path: WalkResult[] = []
     const maze = new Maze()
     const agent = new Agent(maze)
     const walkResult = agent.walk(direction)
-    return walkResult
+
+    if (walkResult.isValid.result) {
+      path.push(walkResult)
+      distanceTravelled++
+      this.handleCoinCollection(agent, coinsCollected)
+    }
+    const score = this.calculateFitness(coinsCollected, distanceTravelled, path)
+
+    console.log(walkResult)
+    console.log(score)
   }
 
   public start(): void {
@@ -112,28 +150,24 @@ export class GeneticAlgorithm {
       })
     )
 
-    // tracking da distancia que o agente percorreu
-    // tracking de quantas moedas
-    // para calcular o fitness do cromossomo
-
     switch (nextMove) {
       case 0: {
-        console.log(this.makeAgentWalk(Directions.LEFT))
+        this.handleAgentWalk(Directions.LEFT)
         break
       }
 
       case 1: {
-        console.log(this.makeAgentWalk(Directions.UP))
+        this.handleAgentWalk(Directions.UP)
         break
       }
 
       case 2: {
-        console.log(this.makeAgentWalk(Directions.RIGHT))
+        this.handleAgentWalk(Directions.RIGHT)
         break
       }
 
       case 3: {
-        console.log(this.makeAgentWalk(Directions.DOWN))
+        this.handleAgentWalk(Directions.DOWN)
         break
       }
 
