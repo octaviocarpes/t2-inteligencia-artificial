@@ -64,7 +64,7 @@ export class GeneticAlgorithm {
   }
 
   private calculateFitness(coinsCollected: number, distanceTravelled: number, path: WalkResult[]) {
-    return coinsCollected * 10 + distanceTravelled * 3 - this.handleCycleDetection(path) - this.penalizeByWallHit(path)
+    return coinsCollected * 100 + distanceTravelled * 5 - this.handleCycleDetection(path) - this.penalizeByWallHit(path)
   }
 
   private selectPopulation(): Population {
@@ -127,66 +127,80 @@ export class GeneticAlgorithm {
     }
   }
 
-  private getFirstResult() {
-
-  }
-
   public start(): void {
     this.generateInitialPopulation()
 
-    let count = 0;
-    let iterationResult
-    const maze = new Maze()
-    const agent = new Agent(maze)
-    let chromossome = this.population[count].chromosome.getSolution()
-    const network = new Network(8, 4)
-    network.setNetworkWeights(8, chromossome)
+    let generationCount = 0;
+    while (generationCount < 2) { // generationCount
+      let populationCount = 0;
+      while (populationCount  < 3) { // populationCount
+        // fazer o agente caminhar ate fracassar e atribuir pontuacao da caminhada no cromossomo
+        let iterationResult = true
+        let walkResult
+        let path = []
+        let score = 0
+        const maze = new Maze()
+        const agent = new Agent(maze)
+        let chromossome = this.population[populationCount].chromosome.getSolution()
+        const network = new Network(8, 4)
+        let agentSurrounding = agent.getAgentSurroundings().map(surrounding => surrounding.value)
+        network.setNetworkWeights(8, chromossome)
 
-    // -1 fora do labirinto
-    // 0 parede
-    // 1 caminho livre
-    // 2 moeda
-    const agentSurrounding = agent.getAgentSurroundings().map(surrounding => surrounding.value)
-    const propagationResult = network.propagation(agentSurrounding)
+        while (iterationResult) {
+          let propagationResult = network.propagation(agentSurrounding)
 
-    const nextMove = propagationResult.indexOf(
-      propagationResult.reduce((prev, next): number => {
-        if (prev > next) return prev
-        else return next
-      })
-    )
+          const nextMove = propagationResult.indexOf(
+            propagationResult.reduce((prev, next): number => {
+              if (prev > next) return prev
+              else return next
+            })
+          )
 
+          switch (nextMove) {
+            case 0: {
+              walkResult = this.handleAgentWalk(agent, Directions.LEFT)
+              iterationResult = walkResult.walkResult.isValid.result
+              agentSurrounding = walkResult.walkResult.agentSurroundings.map(surrounding => surrounding.value * surrounding.distance)
+              break
+            }
 
-    switch (nextMove) {
-      case 0: {
-        iterationResult = this.handleAgentWalk(agent, Directions.LEFT)
-        break
+            case 1: {
+              walkResult = this.handleAgentWalk(agent, Directions.UP)
+              iterationResult = walkResult.walkResult.isValid.result
+              agentSurrounding = walkResult.walkResult.agentSurroundings.map(surrounding => surrounding.value * surrounding.distance)
+              break
+            }
+
+            case 2: {
+              walkResult = this.handleAgentWalk(agent, Directions.RIGHT)
+              iterationResult = walkResult.walkResult.isValid.result
+              agentSurrounding = walkResult.walkResult.agentSurroundings.map(surrounding => surrounding.value * surrounding.distance)
+              break
+            }
+
+            case 3: {
+              walkResult = this.handleAgentWalk(agent, Directions.DOWN)
+              iterationResult = walkResult.walkResult.isValid.result
+              agentSurrounding = walkResult.walkResult.agentSurroundings.map(surrounding => surrounding.value * surrounding.distance)
+              break
+            }
+
+            default: break
+          }
+          score += walkResult.score
+          path.push(`${walkResult.walkResult.position.x} - ${walkResult.walkResult.position.y}`)
+        }
+        populationCount++
+        console.log('Vazou!')
+        console.log(`Populacao: ${populationCount}`)
+        console.log(`Caminho: ${path}`)
+        console.log(`Pontuacao: ${score}`)
+        console.log('Hora de trocar a populacao e atribuir o score nela')
       }
 
-      case 1: {
-        iterationResult = this.handleAgentWalk(agent, Directions.UP)
-        break
-      }
-
-      case 2: {
-        iterationResult = this.handleAgentWalk(agent, Directions.RIGHT)
-        break
-      }
-
-      case 3: {
-        iterationResult = this.handleAgentWalk(agent, Directions.DOWN)
-        break
-      }
-
-      default: return
+      console.log(`Geracao: ${generationCount}`)
+      console.log(`Hora de pegar o cromossomo mais apto e realizar as reproducoes/mutacoes`)
+      generationCount++
     }
-    console.log(iterationResult)
-
-    // while (count < this.populationSize) {
-    //  Fazer agente caminhar ate fracassar
-    //  aqui algoritmo genetico
-    //  depois do agente caminhar e fracassar, fazer os esquemas do genetico
-    // }
-    count++
   }
 }

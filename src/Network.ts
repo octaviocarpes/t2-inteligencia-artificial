@@ -39,6 +39,7 @@ export class Network {
   public propagation(x: number[]): number[] {
 
     let hiddenLayerResults: number[] = []
+    let resultsCopy = []
 
     for (let i = 0; i < this.hiddenNeuronsSize; i++) {
       const synapse = this.hiddenNeuronLayer[i].calculateY(x)
@@ -47,9 +48,9 @@ export class Network {
 
     for (let i = 0; i < this.resultNeuronsSize; i++) {
       const synapse = this.resultNeuronLayer[i].calculateY(x)
-      this.results.push(synapse)
+      resultsCopy.push(synapse)
     }
 
-    return this.results
+    return resultsCopy
   }
 }
