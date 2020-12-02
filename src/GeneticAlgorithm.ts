@@ -68,15 +68,79 @@ export class GeneticAlgorithm {
   }
 
   private selectPopulation(): Population {
-    return this.population[0]
+    const bestFittedPopulationIndex = this.population.indexOf(
+      this.population.filter(
+        element => element.fitnessScore === this.population
+          .map(being => being.fitnessScore)
+          .reduce((prev, next) => {
+            if (prev > next) return prev
+            else return next
+          }))[0]
+    )
+
+    const bestFittedPopulation: Population = {
+      chromosome: this.population[bestFittedPopulationIndex].chromosome,
+      fitnessScore: 0
+    }
+
+    this.population[bestFittedPopulationIndex] = {
+      chromosome: new Chromosome([]),
+      fitnessScore: 0
+    }
+    return bestFittedPopulation
+  }
+
+  private mediumCrossOver(father: Population, mother: Population): Population {
+
+    let childArray = []
+
+    for(let i = 0; i < father.chromosome.getSolution().length; i++) {
+      const mediumPoint = (father.chromosome.getSolution()[i] * mother.chromosome.getSolution()[i]) / 2
+      childArray.push(mediumPoint)
+    }
+
+    return {
+      chromosome: new Chromosome(childArray),
+      fitnessScore: 0
+    }
   }
 
   private reproduce(population: Population) {
+    let newPopulation: Population[] = []
 
+    newPopulation.push(population)
+
+    const father = population
+    const mother = this.selectPopulation()
+    newPopulation.push(mother)
+
+    const child = this.mediumCrossOver(father, mother)
+    newPopulation.push(child)
+
+    for (let i = 0; i < this.populationSize - 3; i++) {
+      if (i % 2 === 0) {
+        newPopulation.push(this.mediumCrossOver(father, newPopulation[i]))
+      } else newPopulation.push(this.mediumCrossOver(mother, newPopulation[i]))
+    }
+
+    this.population = [...newPopulation]
+  }
+
+  private mutateChromossome(chromosome: Population): void {
+    const rng = Math.random()
+
+    for (let i = 0; i < chromosome.chromosome.getSolution().length; i++) {
+      if (rng < 0.1) {
+        chromosome.chromosome.getSolution()[i] = Math.random()
+      }
+    }
   }
 
   private mutate(): void {
-
+    for(let i = 0; i < this.populationSize; i++) {
+      const rng = Math.random()
+      if (rng < 0.2) this.mutateChromossome(this.population[i])
+    }
   }
 
   private penalizeByWallHit(path: WalkResult[]): number {
@@ -128,16 +192,20 @@ export class GeneticAlgorithm {
   }
 
   public start(): void {
+    let finalDestination = false
+    let path = []
+    let bestPath = []
     this.generateInitialPopulation()
 
     let generationCount = 0;
-    while (generationCount < 2) { // generationCount
+    while (generationCount < this.generations) { // generationCount
       let populationCount = 0;
-      while (populationCount  < 3) { // populationCount
-        // fazer o agente caminhar ate fracassar e atribuir pontuacao da caminhada no cromossomo
+      while (populationCount  < this.populationSize) { // populationCount
         let iterationResult = true
+        let lastWalkPosition
+        let cycleDetected
+        let isPositionValid
         let walkResult
-        let path = []
         let score = 0
         const maze = new Maze()
         const agent = new Agent(maze)
@@ -182,25 +250,71 @@ export class GeneticAlgorithm {
               walkResult = this.handleAgentWalk(agent, Directions.DOWN)
               iterationResult = walkResult.walkResult.isValid.result
               agentSurrounding = walkResult.walkResult.agentSurroundings.map(surrounding => surrounding.value * surrounding.distance)
+              finalDestination = walkResult.walkResult.isFinalDestination
               break
             }
 
             default: break
           }
           score += walkResult.score
-          path.push(`${walkResult.walkResult.position.x} - ${walkResult.walkResult.position.y}`)
+          isPositionValid = walkResult.walkResult.isValid.result
+
+          lastWalkPosition = `${walkResult.walkResult.position.x} - ${walkResult.walkResult.position.y}`
+
+          if (isPositionValid) {
+            if (path.filter(element => element === lastWalkPosition).length === 0) {
+              path.push(lastWalkPosition)
+            } else {
+              cycleDetected = true
+              iterationResult = false
+            }
+          } else {
+            iterationResult = false
+          }
+
+          if (finalDestination) {
+            iterationResult = false
+          }
         }
+        console.log('\n')
+        console.log('**********************************************************')
+        console.log(`Population: ${populationCount}`)
+        console.log(`Path: ${path.map(element => element += ' ')}`)
+        console.log(`Is Path Valid:
+        value: ${isPositionValid},
+        reason: ${cycleDetected ? 'Cycle Detected' : 'Position is invalid'}: (${lastWalkPosition})
+        `)
+        console.log('\n')
+        console.log(`Score: ${score}`)
+        console.log('**********************************************************')
+        console.log('\n')
+
+        this.population[populationCount].fitnessScore = score
+
+        if (bestPath.length < path.length) {
+          bestPath = path
+        }
+
         populationCount++
-        console.log('Vazou!')
-        console.log(`Populacao: ${populationCount}`)
-        console.log(`Caminho: ${path}`)
-        console.log(`Pontuacao: ${score}`)
-        console.log('Hora de trocar a populacao e atribuir o score nela')
       }
 
-      console.log(`Geracao: ${generationCount}`)
-      console.log(`Hora de pegar o cromossomo mais apto e realizar as reproducoes/mutacoes`)
+      if (finalDestination) {
+        console.log('Final destination found, stopping genetic cycle')
+        console.log(path)
+      }
+
+      console.log(`Generation: ${generationCount}`)
+      console.log(`Reproducing and mutating population...`)
+
+      const bestPopulation = this.selectPopulation()
+      // reproduce
+      this.reproduce(bestPopulation)
+      // mutate
+      this.mutate()
+
       generationCount++
     }
+
+    console.log(`Best path found: ${bestPath}`)
   }
 }

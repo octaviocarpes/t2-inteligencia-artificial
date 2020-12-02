@@ -17,7 +17,8 @@ export interface WalkResult {
   isValid: {
     result: boolean
     reason?: string
-  }
+  },
+  isFinalDestination: boolean
   agentSurroundings: AgentSurrouding[]
   distanceToEnd: number
 }
@@ -124,6 +125,11 @@ export class Agent {
     }
   }
 
+  private verifyIfFinalDestination(): boolean {
+    if (this.currentPosition.x === 9 && this.currentPosition.y === 9) return true
+    else return false
+  }
+
   public getAgentSurroundings(): AgentSurrouding[] {
     const { x, y } = this.currentPosition
     const leftView = x - 1
@@ -148,6 +154,7 @@ export class Agent {
         isValid: {
           result: this.isPositionValid(),
         },
+        isFinalDestination: this.verifyIfFinalDestination(),
         agentSurroundings: this.getAgentSurroundings(),
         distanceToEnd: this.calculateEuclideanDistance(this.currentPosition.x, this.currentPosition.y)
       }
@@ -158,6 +165,7 @@ export class Agent {
           result: this.isPositionValid(),
           reason: this.getInvalidPositionReason()
         },
+        isFinalDestination: this.verifyIfFinalDestination(),
         agentSurroundings: this.getAgentSurroundings(),
         distanceToEnd: this.calculateEuclideanDistance(this.currentPosition.x, this.currentPosition.y)
       }
